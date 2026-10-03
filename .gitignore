@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+.env
+tests/wsps-firefox-*/
+tests/artifacts/
+tests/tmp*/

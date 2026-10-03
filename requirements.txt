@@ -1,0 +1,1 @@
+# Aucune dépendance Python tierce. Bibliothèque standard Python 3.14.4.
