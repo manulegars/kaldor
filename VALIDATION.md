@@ -2,11 +2,12 @@
 
 ## Résultats réussis
 
-- 20 tests Python : calibration WS–PS originale, équilibre et repères ; sens des
+- 23 tests Python : calibration WS–PS originale, équilibre et repères ; sens des
   chocs ; invariance de u* pour β = 1 ; unités d'Okun ; écarts inflation/chômage ;
   calcul des anticipations adaptatives sur 13 périodes ; domaine et valeurs
   manquantes ; normalisation et débordement du radar ; transfert WS–PS → Phillips
-  soumis à confirmation ; entrées invalides ; indépendance entre visiteurs.
+  soumis à confirmation ; croix keynésienne et multiplicateur ; équilibres IS–LM
+  et IS–MP ; sens des chocs monétaires et OG–DG ; entrées invalides ; indépendance.
 - Parcours Firefox du laboratoire : carte et six relations, WS–PS puis Phillips
   puis Okun, confirmation de u*, déplacements sur/d'une courbe, 20 saisies rapides,
   lecture t0–t12, pas par pas, comparaison avant/après, graphes à échelles fixes,
@@ -15,20 +16,19 @@
   métadonnées présents. Toutes les ressources web sont chargées localement.
 - Parcours de la page historique WS–PS : testé dans Firefox après intégration.
 - Parcours répété avec la préférence système « réduire les animations » activée.
+- Deuxième livraison vérifiée dans Firefox : multiplicateur de G et vagues,
+  changement de variante IS–LM / IS–MP, choc de coûts OG–DG, unités et explications.
 - `docker compose config --quiet`, compilation Python et `git diff --check` valides.
 
-## Déploiement constaté
+## Déploiement
 
-Le port 8082 écoute sur `0.0.0.0` et `/health` répond HTTP 200. La page servie
-par le conteneur reste cependant l'ancienne application WS–PS : `/` porte encore
-le titre « Atelier WS–PS », tandis que `/api/catalog` et `/lab.js` répondent 404.
+`docker compose config --quiet` valide le fichier Compose. Le démarrage ou la
+reconstruction de l'image n'a pas pu être vérifié dans cette session : l'accès au
+socket `/var/run/docker.sock` a répondu « permission denied », y compris lors de
+la commande documentée `docker compose up -d --build --wait`. Le conteneur live
+n'a donc pas été modifié et son état courant n'a pas pu être inspecté.
 
-La mise à jour de l'image avec `docker compose up -d --build --wait` n'a pas pu
-être faite depuis cette session : les opérations sur le socket Docker et la
-reconstruction requièrent une authentification sudo interactive. Les essais sudo
-sans authentification répondent « interactive authentication is required ».
-
-Pour publier les fichiers validés :
+Pour reconstruire et démarrer avec les droits Docker de la machine :
 
 ```bash
 cd /home/manu/projets/admin/ws-ps

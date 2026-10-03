@@ -105,6 +105,49 @@ class LabTests(unittest.TestCase):
                         {'period':1.2},{'period':13},{'period':True},{'axis':'wrong'},{'expectation':'rational'}]:
             with self.assertRaises(ValueError):calculate(payload)
 
+    def test_keynesian_cross_multiplier_and_leakages(self):
+        closed=self.calc('multiplier',{'t':0,'m':0,'c':.8})['result']['raw']
+        self.assertAlmostEqual(closed['multiplier'],1/(1-.8))
+        raised_data=self.calc('multiplier',{'G':15});raised=raised_data['result']
+        self.assertAlmostEqual(raised['raw']['delta_Y'],5*raised['raw']['multiplier'])
+        self.assertAlmostEqual(raised['raw']['delta_trade_balance'],-raised['raw']['delta_imports'])
+        closed_k=self.calc('multiplier',{'m':0})['result']['raw']['multiplier']
+        open_k=self.calc('multiplier',{'m':.25})['result']['raw']['multiplier']
+        self.assertGreater(closed_k,open_k)
+        self.assertEqual(len(raised['trajectory']),12)
+        self.assertAlmostEqual(raised['trajectory'][0]['contribution'],5)
+        self.assertAlmostEqual(raised['metrics'][5]['value'],raised_data['reference']['raw']['Y'])
+        outside=self.calc('multiplier',{'c':.2,'m':.5})['result']
+        self.assertFalse(outside['raw']['wave_valid'])
+        self.assertEqual(outside['trajectory'],[])
+        self.assertIn('0 ≤ b < 1',outside['warnings'][0])
+
+    def test_policy_equilibria_and_monetary_expansion(self):
+        for variant in ('lm','mp'):
+            result=self.calc('policy',variant=variant)['result']['raw']
+            self.assertAlmostEqual(result['IS_residual'],0,places=9)
+            self.assertAlmostEqual(result['other_residual'],0,places=9)
+        base=self.calc('policy')['result']['raw']
+        ease=self.calc('policy',{'real_money':35},variant='lm')['result']['raw']
+        self.assertGreater(ease['Y'],base['Y'])
+        self.assertLess(ease['r'],base['r'])
+        # Same IS and G shock: a positive MP reaction moderates the output response.
+        constant=self.calc('policy',{'G':30,'phi':0},reference={'G':20,'phi':0},variant='mp')
+        reacting=self.calc('policy',{'G':30,'phi':.8},reference={'G':20,'phi':.8},variant='mp')
+        dy0=constant['result']['raw']['Y']-constant['reference']['raw']['Y']
+        dy1=reacting['result']['raw']['Y']-reacting['reference']['raw']['Y']
+        self.assertGreater(dy0,dy1)
+
+    def test_aggregate_demand_supply_shock_directions(self):
+        base=self.calc('ad_as')['result']['raw']
+        demand=self.calc('ad_as',{'d':8})['result']['raw']
+        cost=self.calc('ad_as',{'s':8})['result']['raw']
+        self.assertGreater(demand['Y'],base['Y']);self.assertGreater(demand['P'],base['P'])
+        self.assertLess(cost['Y'],base['Y']);self.assertGreater(cost['P'],base['P'])
+        self.assertLess(cost['output_gap'],base['output_gap'])
+        with self.assertRaisesRegex(ValueError,'production d’équilibre doit être positive'):
+            self.calc('multiplier',{'C0':0,'I0':0,'G':0,'X0':0})
+
     def test_no_shared_user_state(self):
         defaults=copy.deepcopy(DEFAULTS)
         a=self.calc('phillips',{'u':8,'expected':10})

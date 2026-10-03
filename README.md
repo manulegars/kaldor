@@ -1,9 +1,9 @@
 # Laboratoire de macroéconomie — carré de Kaldor
 
 Application web pédagogique en français. Elle garde le simulateur WS–PS d'origine
-à `/ws-ps` et ajoute une page d'accueil, un radar et les ateliers de Phillips et
-d'Okun. Le premier parcours va de l'équilibre du marché du travail au lien
-inflation–anticipations, puis à la croissance et aux variations du chômage.
+à `/ws-ps` et réunit l'accueil du carré de Kaldor, WS–PS, Phillips, Okun, la croix
+keynésienne, IS–LM / IS–MP et offre–demande globales. Ces ateliers isolés calculent
+uniquement les dimensions déterminées par leurs équations.
 
 ## Lancer et mettre à jour avec Docker
 
@@ -89,6 +89,47 @@ Version en différences : `Δu = −β(g − g_seuil)` ;
 La croissance d'équilibre de cette droite peut rester positive. Une valeur de
 chômage finale hors de `[0 ; 100 %]` est signalée et n'est jamais écrêtée.
 
+## Deuxième livraison — demande, politiques et offre
+
+### Demande et multiplicateur
+
+La croix keynésienne calcule `DA = A + bY` et `Y* = A / (1 − b)` avec
+consommation induite, impôts proportionnels et importations. Les curseurs de
+`G`, `c`, `t` et `m` distinguent déplacement parallèle de DA et modification de
+sa pente ; les paramètres autonomes sont dans le volet avancé. L'animation
+décompose une variation de G en 12 vagues géométriques : ce sont des tours de
+dépense théoriques, pas des années. Elle montre aussi `ΔM = m ΔY` et la variation
+du solde commercial à exportations inchangées. Prix fixes, capacités disponibles,
+investissement exogène et absence de réaction monétaire sont des hypothèses ;
+aucune inflation n'est calculée.
+
+### Politiques économiques : IS–LM et IS–MP
+
+Le sélecteur choisit un cadre distinct. IS–LM détermine le taux à partir du
+marché monétaire et des encaisses réelles ; IS–MP utilise une règle de taux
+réagissant éventuellement à l'écart de production. Le cadre MP ne fixe pas en
+même temps une quantité de monnaie indépendante. Les deux variantes résolvent
+l'intersection avec IS et affichent production, taux réel et effet du taux sur
+l'investissement. Les taux sont affichés en pourcentage et utilisés en points
+de pourcentage dans les coefficients calibrés. La règle MP est simplifiée,
+pas une règle de Taylor complète.
+
+### Offre et demande globales
+
+DG et OG de court terme sont construites à partir de `x = ln(Y/Y_pot)` et
+`p = ln(P/P_ref)`, donc le modèle conserve des valeurs positives de production
+et de prix. Un choc positif de demande augmente production et prix ; un choc
+défavorable de coûts augmente les prix et réduit la production. La variation de
+l'indice des prix compare deux équilibres : faute de période, elle n'est jamais
+présentée comme une inflation annuelle. Le modèle est statique et n'explique
+pas la persistance d'une inflation.
+
+Dans ces ateliers, une transition entre courbes est une interpolation visuelle
+entre équilibres recalculés, pas une trajectoire sur plusieurs années. Les niveaux
+de production ne sont pas convertis en croissance. Les dimensions du carré qui
+ne sont pas déterminées apparaissent comme non calculées. Les passerelles vers
+Okun, Phillips et WS–PS n'effectuent aucun transfert numérique incompatible.
+
 ### États, comparaison et exports
 
 Chaque atelier conserve paramètres et référence dans le navigateur de l'onglet
@@ -105,7 +146,7 @@ système de réduction des animations sont pris en charge.
 ## Organisation du code
 
 - `app/units.py` : indicateurs, unités et échelles du radar.
-- `app/economics.py` : validation pure et calculs WS–PS, Phillips, Okun, trajectoire adaptative et liaison explicite.
+- `app/economics.py` : validation pure et calculs des six ateliers, trajectoires et liaison explicite WS–PS → Phillips.
 - `app/pedagogy.py` : textes, auteurs, hypothèses, questions, scénarios et réglages.
 - `app/server.py` : service HTTP local, API et fichiers statiques.
 - `app/static/lab.html`, `lab.css`, `lab.js`, `plots.js` : interface commune, navigation et graphiques SVG.
@@ -119,14 +160,13 @@ numéro de séquence avant d'afficher son résultat.
 
 ## Prochaines livraisons
 
-La première livraison n'assemble pas les trois ateliers en un modèle intégré ;
-elle ne simule donc aucune réponse automatique de croissance, d'inflation,
-d'emploi, de commerce extérieur ou de dette à une politique donnée.
+Les ateliers des livraisons 1 et 2 restent indépendants ; aucun modèle intégré
+ne simule une réponse automatique complète du carré de Kaldor.
 
-1. Multiplicateur, demande et cadres IS–LM / IS–MP distincts ; offre globale–demande globale.
-2. Économie ouverte, solde commercial, délais, change en J et Mundell–Fleming.
-3. Dette publique et ratio dette/PIB avec taux nominal, croissance nominale, solde primaire et hors ajustements stock-flux.
-4. Scénarios intégrés documentés, parcours temporels cohérents et comparaison de politiques.
+1. Économie ouverte, délais d'ajustement, courbe en J et Mundell–Fleming.
+2. Dette publique et ratio dette/PIB avec taux nominal, croissance nominale,
+   solde primaire et sans ajustements stock-flux.
+3. Scénarios intégrés documentés, trajectoires cohérentes et comparaison de politiques.
 
 Chaque futur atelier renseignera seulement les indicateurs découlant de ses
 équations. Un solde commercial ne sera pas assimilé au compte courant ; le niveau
@@ -156,6 +196,9 @@ Marionette sur 2828. Captures de test dans `tests/artifacts/`.
 - Edmund Phelps (1967), « Phillips Curves, Expectations of Inflation and Optimal Unemployment over Time ».
 - Milton Friedman (1968), « The Role of Monetary Policy ».
 - Arthur Okun (1962), « Potential GNP: Its Measurement and Significance ».
+- John Maynard Keynes (1936), *The General Theory of Employment, Interest and Money*.
+- Richard F. Kahn (1931), [« The Relation of Home Investment to Unemployment »](https://doi.org/10.2307/2223697).
+- John R. Hicks (1937), [« Mr. Keynes and the “Classics” »](https://doi.org/10.2307/1907242).
 - [CORE Econ — glossaire WS–PS](https://www.core-econ.org/glossary/).
 - [Federal Reserve Bank of St. Louis — activité et loi d'Okun](https://www.stlouisfed.org/publications/regional-economist/october-2013/output-and-unemployment-how-do-they-relate-today).
 - [Federal Reserve Bank of St. Louis — anticipations et courbe de Phillips](https://www.stlouisfed.org/publications/page-one-economics/2021/07/15/inflation-expectations-the-phillips-curve-and-the-feds-dual-mandate).

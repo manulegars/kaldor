@@ -51,11 +51,12 @@ def run():
             screenshot('kaldor-desktop.png')
             def navigate(model):
                 m.js(f"location.hash='{model}';return true;")
-                m.wait(f"document.getElementById('model-title').textContent==={json.dumps({'wsps':'WS–PS','phillips':'Phillips & anticipations','okun':'Loi d’Okun'}[model])} && document.getElementById('lab-status').textContent==='À jour'")
+                m.wait(f"document.getElementById('model-title').textContent==={json.dumps({'wsps':'WS–PS','phillips':'Phillips & anticipations','okun':'Loi d’Okun','multiplier':'Demande et multiplicateur','policy':'Politiques économiques','ad_as':'Offre et demande globales'}[model])} && document.getElementById('lab-status').textContent==='À jour'")
             def setvalue(key,value):
                 m.js(f"let e=document.getElementById('number-{key}');e.value={json.dumps(value)};e.dispatchEvent(new Event('input',{{bubbles:true}}));return true;")
                 m.wait("document.getElementById('lab-status').textContent==='À jour'")
             def metric(index=0):return m.js(f"return document.querySelectorAll('#lab-metrics strong')[{index}].textContent")
+            def metric_num(index=0):return m.js(f"return Number(document.querySelectorAll('#lab-metrics strong')[{index}].textContent.replace(',','.').replace('−','-'))")
             navigate('wsps')
             assert metric()=='10'
             assert metric(1)=='100'
@@ -64,7 +65,7 @@ def run():
             setvalue('mu',40)
             assert metric()=='14,76'
             m.js("document.getElementById('bridge-accepted').checked=true;document.getElementById('bridge-button').click();return true;")
-            m.wait("location.hash==='#phillips' && document.getElementById('lab-status').textContent==='À jour'")
+            m.wait("location.hash==='#phillips' && document.getElementById('link-provenance').textContent.includes('importé de WS–PS') && document.getElementById('lab-status').textContent==='À jour'")
             assert m.js("return document.getElementById('link-provenance').textContent.includes('importé de WS–PS')")
             assert abs(float(m.js("return document.getElementById('number-ustar').value"))-14.761904)<1e-5
             # Reset then point movement vs curve shift.
@@ -155,6 +156,32 @@ def run():
             setvalue('initial_u',0)
             assert metric(1)=='—'
             assert 'hors' in m.js("return document.getElementById('lab-warnings').textContent")
+            # Second delivery: Keynesian cross, monetary framework selector and AD-AS.
+            navigate('multiplier')
+            assert metric()=='108,7'
+            setvalue('G',15)
+            assert metric(1)=='10,87'
+            assert 'parallèle' in m.js("return document.getElementById('mechanism-kind').textContent")
+            m.js("document.getElementById('temporal').checked=true;document.getElementById('temporal').dispatchEvent(new Event('change'));document.getElementById('lab-step').click();return true;")
+            m.wait("document.getElementById('trajectory-table').children.length===12 && document.getElementById('lab-status').textContent==='À jour'")
+            assert 'Tour de dépense' in m.js("return document.getElementById('position-label').textContent")
+            navigate('policy')
+            assert m.js("return document.getElementById('variant-control').hidden") is False
+            m.js("document.getElementById('policy-variant').value='mp';document.getElementById('policy-variant').dispatchEvent(new Event('change'));return true;")
+            m.wait("document.getElementById('lab-status').textContent==='À jour'")
+            assert 'MP' in m.js("return [...document.querySelectorAll('#lab-chart text')].map(n=>n.textContent).join(' ')")
+            m.js("document.getElementById('lab-reset').click();return true;")
+            m.wait("document.getElementById('lab-status').textContent==='À jour'")
+            navigate('ad_as')
+            initial_output=metric_num(0);initial_price=metric_num(1)
+            setvalue('s',8)
+            assert metric_num(0)<initial_output and metric_num(1)>initial_price
+            assert 'ΔP entre équilibres' in m.js("return document.getElementById('graph-note').textContent")
+            for model in ('multiplier','policy','ad_as'):
+                m.command('WebDriver:SetWindowRect',{'width':390,'height':844});navigate(model)
+                assert m.js('return document.documentElement.scrollWidth<=innerWidth')
+                assert m.js("return document.querySelector('#workshop .controls').getBoundingClientRect().top>=document.querySelector('#workshop .chart-card').getBoundingClientRect().bottom")
+            m.command('WebDriver:SetWindowRect',{'width':1440,'height':1100})
             # Narrow screen, independent second tab, no external requests.
             m.command('WebDriver:SetWindowRect',{'width':390,'height':844})
             assert m.js('return document.documentElement.scrollWidth<=innerWidth')
@@ -169,7 +196,7 @@ def run():
             m.command('WebDriver:Navigate',{'url':'http://127.0.0.1:18082/#okun'})
             m.wait("document.getElementById('lab-status').textContent==='À jour'")
             assert metric()=='0'
-            print('OK : accueil et 6 relations ; parcours WS–PS → Phillips → Okun ; consentement de liaison ; unités ; anticipations ; 20 entrées rapides ; clavier ; comparaisons et échelles ; téléchargement JSON, rechargement et SVG ; mobile ; état indépendant ; mode réduit='+str(reduced))
+            print('OK : accueil et 6 relations ; parcours WS–PS → Phillips → Okun ; multiplicateur et vagues ; variantes IS–LM / IS–MP ; chocs OG–DG ; consentement de liaison ; 20 entrées rapides ; clavier ; comparaisons et échelles ; JSON/SVG ; mobile ; état indépendant ; mode réduit='+str(reduced))
         except Exception:
             if m:
                 try:
